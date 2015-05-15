@@ -15,6 +15,10 @@
 #import "FastttFocus.h"
 #import "FastttCapturedImage+Process.h"
 
+static void *AVCaptureStillImageIsAdjustingFocusContext = &AVCaptureStillImageIsAdjustingFocusContext;
+static void *AVCaptureStillImageIsAdjustingExposureContext = &AVCaptureStillImageIsAdjustingExposureContext;
+static void *AVCaptureStillImageIsAdjustingWhiteBalanceContext = &AVCaptureStillImageIsAdjustingWhiteBalanceContext;
+
 @interface FastttFilterCamera () <FastttFocusDelegate>
 
 @property (nonatomic, strong) IFTTTDeviceOrientation *deviceOrientation;
@@ -29,18 +33,18 @@
 @implementation FastttFilterCamera
 
 @synthesize delegate = _delegate,
-            returnsRotatedPreview = _returnsRotatedPreview,
-            showsFocusView = _showsFocusView,
-            maxScaledDimension = _maxScaledDimension,
-            normalizesImageOrientations = _normalizesImageOrientations,
-            cropsImageToVisibleAspectRatio = _cropsImageToVisibleAspectRatio,
-            interfaceRotatesWithOrientation = _interfaceRotatesWithOrientation,
-            fixedInterfaceOrientation = _fixedInterfaceOrientation,
-            handlesTapFocus = _handlesTapFocus,
-            scalesImage = _scalesImage,
-            cameraDevice = _cameraDevice,
-            cameraFlashMode = _cameraFlashMode,
-            cameraTorchMode = _cameraTorchMode;
+returnsRotatedPreview = _returnsRotatedPreview,
+showsFocusView = _showsFocusView,
+maxScaledDimension = _maxScaledDimension,
+normalizesImageOrientations = _normalizesImageOrientations,
+cropsImageToVisibleAspectRatio = _cropsImageToVisibleAspectRatio,
+interfaceRotatesWithOrientation = _interfaceRotatesWithOrientation,
+fixedInterfaceOrientation = _fixedInterfaceOrientation,
+handlesTapFocus = _handlesTapFocus,
+scalesImage = _scalesImage,
+cameraDevice = _cameraDevice,
+cameraFlashMode = _cameraFlashMode,
+cameraTorchMode = _cameraTorchMode;
 
 - (instancetype)init
 {
@@ -99,7 +103,7 @@
     _fastFocus = nil;
     
     _fastFilter = nil;
-
+    
     [self _teardownCaptureSession];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -193,8 +197,7 @@
     if (!_deviceAuthorized) {
         return;
     }
-    
-    [self _takePhoto];
+    [self _takePhotoIfReady];
 }
 
 - (void)cancelImageProcessing
@@ -300,7 +303,7 @@
         [device setCameraFlashMode:cameraFlashMode];
         return;
     }
-
+    
     _cameraFlashMode = FastttCameraFlashModeOff;
 }
 
@@ -408,7 +411,7 @@
         if (_deviceAuthorized) {
             
             dispatch_async(dispatch_get_main_queue(), ^{
-    
+                
                 if (_stillCamera) {
                     return;
                 }
@@ -441,7 +444,7 @@
                 [self setCameraFlashMode:_cameraFlashMode];
                 
                 _deviceOrientation = [IFTTTDeviceOrientation new];
-               
+                
                 if (self.isViewLoaded && self.view.window) {
                     [self _insertPreviewLayer];
                     [self startRunning];
@@ -474,6 +477,53 @@
 
 #pragma mark - Capturing a Photo
 
+- (void)_takePhotoIfReady
+{
+    AVCaptureDevice *device = _stillCamera.inputCamera;
+    if(device.adjustingFocus){
+        [device addObserver:self forKeyPath:@"adjustingFocus" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingFocusContext];
+    }
+    else if(device.adjustingExposure){
+        [device addObserver:self forKeyPath:@"adjustingExposure" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingExposureContext];
+    }
+    else if(device.adjustingWhiteBalance){
+        [device addObserver:self forKeyPath:@"adjustingWhiteBalance" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingWhiteBalanceContext];
+    }
+    else{
+        [self _takePhoto];
+    }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if(context == AVCaptureStillImageIsAdjustingFocusContext){
+        BOOL isAdjustingFocus = [[change objectForKey:NSKeyValueChangeNewKey] boolValue];
+        if(!isAdjustingFocus){
+            AVCaptureDevice *device = _stillCamera.inputCamera;
+            [device removeObserver:self forKeyPath:@"adjustingFocus"];
+            [self _takePhotoIfReady];
+        }
+    }
+    else if(context == AVCaptureStillImageIsAdjustingExposureContext){
+        BOOL isAdjustingExposure = [[change objectForKey:NSKeyValueChangeNewKey] boolValue];
+        if(!isAdjustingExposure){
+            AVCaptureDevice *device = _stillCamera.inputCamera;
+            [device removeObserver:self forKeyPath:@"adjustingExposure"];
+            [self _takePhotoIfReady];
+        }
+    }
+    else if(context == AVCaptureStillImageIsAdjustingWhiteBalanceContext){
+        BOOL isAdjustingWhiteBalance = [[change objectForKey:NSKeyValueChangeNewKey] boolValue];
+        if(!isAdjustingWhiteBalance){
+            AVCaptureDevice *device = _stillCamera.inputCamera;
+            [device removeObserver:self forKeyPath:@"adjustingWhiteBalance"];
+            [self _takePhotoIfReady];
+        }
+    }
+}
+
+
+
 - (void)_takePhoto
 {
     if (self.isCapturingImage) {
@@ -489,15 +539,18 @@
 #else
     
     UIDeviceOrientation previewOrientation = [self _currentPreviewDeviceOrientation];
-
+    
     UIImageOrientation outputImageOrientation = [self _outputImageOrientation];
-
+    
+    
     [_stillCamera capturePhotoAsImageProcessedUpToFilter:self.fastFilter.filter withOrientation:UIImageOrientationUp withCompletionHandler:^(UIImage *processedImage, NSError *error){
         
         if (self.isCapturingImage) {
             [self _processCameraPhoto:processedImage needsPreviewRotation:needsPreviewRotation imageOrientation:outputImageOrientation previewOrientation:previewOrientation];
         }
     }];
+    
+    
 #endif
 }
 
@@ -527,7 +580,7 @@
         }
         
         UIImage *fixedOrientationImage = [image fastttRotatedImageMatchingOrientation:imageOrientation];
-
+        
         FastttCapturedImage *capturedImage = [FastttCapturedImage fastttCapturedFullImage:fixedOrientationImage];
         
         [capturedImage cropToRect:cropRect
