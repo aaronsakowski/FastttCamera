@@ -13,7 +13,6 @@
 #import "UIImage+FastttCamera.h"
 #import "AVCaptureDevice+FastttCamera.h"
 #import "FastttFocus.h"
-#import "FastttFilter.h"
 #import "FastttCapturedImage+Process.h"
 
 @interface FastttFilterCamera () <FastttFocusDelegate>
@@ -21,7 +20,6 @@
 @property (nonatomic, strong) IFTTTDeviceOrientation *deviceOrientation;
 @property (nonatomic, strong) FastttFocus *fastFocus;
 @property (nonatomic, strong) GPUImageStillCamera *stillCamera;
-@property (nonatomic, strong) FastttFilter *fastFilter;
 @property (nonatomic, strong) GPUImageView *previewView;
 @property (nonatomic, assign) BOOL deviceAuthorized;
 @property (nonatomic, assign) BOOL isCapturingImage;

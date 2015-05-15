@@ -23,7 +23,7 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   FastttCamera:
-    :path: ../FastttCamera.podspec
+    :path: "../FastttCamera.podspec"
 
 SPEC CHECKSUMS:
   Expecta: 8c507baf13211207b1e9d0a741480600e6b4ed15
@@ -35,4 +35,4 @@ SPEC CHECKSUMS:
   OCMock: a10ea9f0a6e921651f96f78b6faee95ebc813b92
   Specta: a353759f073ffcc0a365b782fe4aaeac064c03c6
 
-COCOAPODS: 0.36.3
+COCOAPODS: 0.37.1

@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "FastttCameraInterface.h"
+#import "FastttFilter.h"
 
 /**
  *  Public class for you to use to create a filtered FastttFilterCamera!
@@ -50,5 +51,7 @@
  *  @return An instance of FastttFilterCamera.
  */
 + (instancetype)cameraWithFilterImage:(UIImage *)filterImage;
+
+@property (nonatomic, strong) FastttFilter *fastFilter;
 
 @end
