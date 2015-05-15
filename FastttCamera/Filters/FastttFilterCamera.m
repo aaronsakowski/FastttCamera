@@ -646,6 +646,9 @@
         } else if (self.deviceOrientation.orientation == UIDeviceOrientationLandscapeRight) {
             return UIImageOrientationRight;
         }
+        else if(self.deviceOrientation.orientation == UIDeviceOrientationPortraitUpsideDown){
+            return UIImageOrientationDown;
+        }
     }
     
     return UIImageOrientationUp;
