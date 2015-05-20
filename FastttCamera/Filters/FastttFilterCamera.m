@@ -483,12 +483,12 @@ cameraTorchMode = _cameraTorchMode;
     if(device.adjustingFocus){
         [device addObserver:self forKeyPath:@"adjustingFocus" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingFocusContext];
     }
-    else if(device.adjustingExposure){
-        [device addObserver:self forKeyPath:@"adjustingExposure" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingExposureContext];
-    }
-    else if(device.adjustingWhiteBalance){
-        [device addObserver:self forKeyPath:@"adjustingWhiteBalance" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingWhiteBalanceContext];
-    }
+//    else if(device.adjustingExposure){
+//        [device addObserver:self forKeyPath:@"adjustingExposure" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingExposureContext];
+//    }
+//    else if(device.adjustingWhiteBalance){
+//        [device addObserver:self forKeyPath:@"adjustingWhiteBalance" options:NSKeyValueObservingOptionNew context:AVCaptureStillImageIsAdjustingWhiteBalanceContext];
+//    }
     else{
         [self _takePhoto];
     }
