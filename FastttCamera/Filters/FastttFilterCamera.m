@@ -648,7 +648,8 @@ cameraTorchMode = _cameraTorchMode;
 
 - (void)_setPreviewVideoOrientation
 {
-    UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+//    UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+    UIDeviceOrientation orientation = [self _currentPreviewDeviceOrientation];
     
     if (orientation == UIDeviceOrientationUnknown
         || orientation == UIDeviceOrientationFaceUp
